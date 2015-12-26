@@ -1,0 +1,91 @@
+%rpob
+%target = 'AGTTCTTCGGTTCCAGCCAGCTGTCTCAGTTTATGGACCAGAACAACCCGCTGTCTGAGATTACGCACAAACGTCGTATCTCCGCACTCGGCCCAGGCGGTC';
+%start=21;
+%endalign=102;
+
+%mrca
+%target = 'GGCACAAGTGCCGGAAGTGAACTCGGCGCTGGTGTCGATCAATCCGCAAAACGGTGCCGTTATGGCGCTGGTCGGTGGCTTTGATTTCAATCAGAGCAAGTTTAACC';
+%start = 16;
+%endalign=107;
+
+%mrcA2
+target = 'TAGTGGCGAAGACTGGCGCGCAGGAGTACGCACCGCACGTCATCAACACTCCGCTGGCAT';
+start = 3;
+endalign=length(target);
+
+%d = dlmread('data/2015-09-01/SR/rpoz-1.bc');
+%d=d+dlmread('data/2015-09-01/SR/rpoz-2.bc');
+%d=d+dlmread('data/2015-09-01/SR/rpoz-3.bc');
+%d=d+dlmread('data/2015-09-01/SR/rpoz-4.bc');
+%d = dlmread('data/compressed20150317/strict/mrca-bc-0.txt');
+%d=d+dlmread('data/compressed20150317/strict/mrca-bc-1.txt');
+%d=d+dlmread('data/compressed20150317/strict/mrca-bc-2.txt');
+%d=d+dlmread('data/compressed20150317/strict/mrca-bc-3.txt');
+d = dlmread('data/20151215/mrcA-2_4_thresh5_matrix.txt');
+d=d+dlmread('data/20151215/mrcA-2_5_thresh5_matrix.txt');
+d=d+dlmread('data/20151215/mrcA-2_6_thresh5_matrix.txt');
+
+%rpoz
+%aligncheck = 'TCATGCCCAGTCATTTCTTC';
+%target = 'TCATGCCCAGTCATTTCTTCACCTGTGGAGCTTTTTAAGTATGGCACGCGTAACTGTTCAGGACGCTGTAGAGAAAATTGGTAACCGTTTTGACCTGGTACTGGTCGCCGCGCGTCGCGCT';
+%start = 41;
+%endalign = 109-1;
+
+%cspe
+%aligncheck = 'AAATCACTAACGGTGCCAAAG';
+%target = 'AAATCACTAACGGTGCCAAAGGCCCTTCTGCTGCAAACGTAATCGCTCTGTAAGATACGTCAGCAAGAATTCAAAACCCGCTTAATCAGCGGGTTTTTTTTGGTCTTTAGTGTGCGGTTGAGG';
+%start = 21;
+%endalign = 53;
+
+nuc2num = containers.Map({'A','C','G','T'},{1,2,3,4});
+num2nuc = containers.Map({1,2,3,4},{'A','C','G','T'});
+subCount = {containers.Map() containers.Map()}; %for [nonsynonymous synonymous] substitutions
+totalCount = {containers.Map() containers.Map()}; %tallying the total population for potential [nonsynonymous synonymous] substitutions
+
+for i = start:length(target)
+    di = d(:,i);
+    for j = 1:double(nuc2num.Count)
+        if target(i)~=num2nuc(j)
+            query=[target(i) num2nuc(j)]; %example: 'AC' is A->C
+
+            %check if it is synonymous or nonsynonymous mutation
+            targetsub = target;
+            targetsub(i) = num2nuc(j);
+            synonymous = strcmp(nt2aa(target(start:end)),nt2aa(targetsub(start:end)))+1;
+            
+            if subCount{synonymous}.isKey(query)
+                subCount{synonymous}(query)=[subCount{synonymous}(query) di(j)];
+                totalCount{synonymous}(query)=[totalCount{synonymous}(query) sum(di(1:double(nuc2num.Count)))];
+            else
+                subCount{synonymous}(query)=di(j);
+                totalCount{synonymous}(query)=sum(di(1:double(nuc2num.Count)));
+            end
+        end
+    end
+end
+
+uS = 0;
+uN = 0;
+for b = 'ACGT'
+    for b2 = 'ACGT'
+        sub=[b b2];
+        if b~=b2 && isKey(subCount{2},sub) && isKey(subCount{1},sub)
+            fmS = filteredMean(subCount{2}(sub));%/mean(totalCount{2}(sub));
+            fmN = filteredMean(subCount{1}(sub));%/mean(totalCount{1}(sub));
+            if (~strcmp(sub,'CA') && ~strcmp(sub,'GT') && ~strcmp(sub,'TC') && ~strcmp(sub,'GA'))
+                uS=uS+fmS;
+                uN=uN+fmN;
+            end
+        end
+    end
+end
+uNuS = uN/uS
+
+nTrials = 2000;
+nulldist = simdNdS(subCount{1},subCount{2},nTrials);
+av = mean(nulldist)
+med = median(nulldist)
+%quantile(nulldist, 0.025)
+%quantile(nulldist, 0.975)
+%p-value
+p = sum(uNuS<=nulldist)/nTrials
