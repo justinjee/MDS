@@ -1,0 +1,8 @@
+ROI: kras
+Phase: 6
+Total nodes checked: 12
+Total variants found: 4
+19 -10 1
+20 -4 1
+32 -1 1
+39 -1 1

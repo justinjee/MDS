@@ -1,0 +1,20 @@
+ROI: rpoB-CDS-reverse
+Phase: 5
+Total nodes checked: 22
+Total variants found: 39
+3 N 20
+4 N 2
+6 N 1
+7 A 2
+8 N 1
+11 N 1
+14 N 1
+15 N 1
+34 N 1
+49 N 1
+58 N 1
+61 N 1
+62 N 1
+64 N 1
+66 N 3
+69 N 1
