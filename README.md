@@ -9,4 +9,4 @@ Data is organized as follows:
 Most recent run, 20151215, contains data on rpoB reverse complement, mrcA (3'), dual-barcoded exogenous sequence, and mrcA in high translation strain and high transcription strain
 All other files are annotated as in the SRA repo (SRP64302) 
 
-NOTE: folders are organized according to number of reads, where paired-end reads count as 2 reads. So strict-3, for example, corresponds to data in which R (the number of separate DNA molecules with the same barcode) = 2.
+NOMENCLATURE ALERT: counts and cutoff folders are organized according to number of reads, where paired-end reads count as 2 reads. So strict-3, for example, corresponds to data in which R (the number of separate DNA molecules with the same barcode) = 2.
